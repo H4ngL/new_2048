@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
-import 'package:logger/logger.dart';
 import 'package:new_2048/models/board.dart';
 import 'package:new_2048/models/tile.dart';
 
@@ -10,7 +9,6 @@ import 'package:uuid/uuid.dart';
 
 class BoardManager {
   late Board board;
-  final logger = Logger();
   BoardManager() {
     var tiles = List<List<Tile>>.generate(
       4,
@@ -93,7 +91,7 @@ class BoardManager {
       // 주변에 같은 숫자가 있는지 확인
       for (var i = 0; i < board.tiles.length; i++) {
         for (var j = 0; j < board.tiles[i].length - 1; j++) {
-          if (board.tiles[i][j] == board.tiles[i][j + 1]) {
+          if (board.tiles[i][j].value == board.tiles[i][j + 1].value) {
             return true;
           }
         }
@@ -101,7 +99,7 @@ class BoardManager {
 
       for (var i = 0; i < board.tiles.length; i++) {
         for (var j = 0; j < board.tiles[i].length - 1; j++) {
-          if (board.tiles[j][i] == board.tiles[j + 1][i]) {
+          if (board.tiles[j][i].value == board.tiles[j + 1][i].value) {
             return true;
           }
         }
@@ -113,11 +111,10 @@ class BoardManager {
 
   // 게임 오버 확인
   bool isOver() {
-    if (isMovable()) {
-      return false;
-    } else {
+    if (isFull() && !isMovable()) {
       return true;
     }
+    return false;
   }
 
   // 왼순 단순 이동에 의한 tile list의 nextIndex 수정

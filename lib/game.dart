@@ -74,6 +74,37 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    if (manager.board.over) {
+      return Positioned.fill(
+          child: Container(
+        color: overlayColor,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const DefaultTextStyle(
+              style: TextStyle(
+                  color: textColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 64.0),
+              child: Text(
+                'Game over!',
+              ),
+            ),
+            const SizedBox(
+              height: 16.0,
+            ),
+            ButtonWidget(
+              onPressed: () {
+                setState(() {
+                  manager.initBoard();
+                });
+              },
+            )
+          ],
+        ),
+      ));
+    }
+
     return RawKeyboardListener(
       autofocus: true,
       focusNode: FocusNode(),
