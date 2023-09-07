@@ -29,4 +29,14 @@ class Board {
           Board? undo}) =>
       Board(score ?? this.score, best ?? this.best, tiles ?? this.tiles,
           over: over ?? this.over, undo: undo ?? this.undo);
+
+  bool get isSameBoard {
+    if (undo == null) return false;
+    for (int i = 0; i < tiles.length; i++) {
+      for (int j = 0; j < tiles[i].length; j++) {
+        if (tiles[i][j].value != undo!.tiles[i][j].value) return false;
+      }
+    }
+    return true;
+  }
 }

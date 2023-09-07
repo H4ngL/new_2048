@@ -21,7 +21,7 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
   final logger = Logger();
 
   late final AnimationController moveController = AnimationController(
-    duration: const Duration(milliseconds: 200),
+    duration: const Duration(milliseconds: 150),
     vsync: this,
   );
 
@@ -54,36 +54,23 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
     if (event is RawKeyUpEvent) {
       setState(() {
         manager.onKey(event);
-        moveController
-            .forward(from: 0.0)
-            .whenComplete(() => manager.boardUpdate());
+        moveController.forward(from: 0.0).whenComplete(() => _afterMove());
       });
     }
   }
 
-  // void _onKey(event) {
-  //   if (moveController.isAnimating) return;
-  //   if (event is RawKeyUpEvent) {
-  //     setState(() {
-  //       manager.onKey(event);
-  //       moveController.forward(from: 0.0);
-  //       moveController.addStatusListener((status) {
-  //         if (status == AnimationStatus.completed) {
-  //           setState(() {
-  //             manager.boardUpdate();
-  //             // for (int i = 0; i < 4; i++) {
-  //             //   for (int j = 0; j < 4; j++) {
-  //             //     print(
-  //             //         'value : ${manager.board.tiles[i][j].value}, index : ${manager.board.tiles[i][j].index}, next : ${manager.board.tiles[i][j].nextIndex}');
-  //             //   }
-  //             // }
-  //             // print('-------------------');
-  //           });
-  //         }
-  //       });
-  //     });
-  //   }
-  // }
+  void _onSwipe(direction) {
+    if (moveController.isAnimating) return;
+    setState(() {
+      manager.onSwipe(direction);
+      moveController.forward(from: 0.0).whenComplete(() => _afterMove());
+    });
+  }
+
+  void _afterMove() {
+    manager.afterMove();
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,11 +79,10 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
       focusNode: FocusNode(),
       onKey: (RawKeyEvent event) {
         _onKey(event);
-        setState(() {});
       },
       child: SwipeDetector(
         onSwipe: (direction, offset) {
-          //TODO : Handle swipe events
+          //_onSwipe(direction);
         },
         child: Scaffold(
           backgroundColor: backgroundColor,

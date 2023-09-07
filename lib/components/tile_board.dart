@@ -44,6 +44,7 @@ class TileBoardWidget extends StatelessWidget {
                 key: ValueKey(tile.id),
                 tile: tile,
                 moveAnimation: moveAnimation,
+                scaleAnimation: scaleAnimation,
                 size: tileSize,
                 child: Container(
                   width: tileSize,

@@ -295,7 +295,16 @@ class BoardManager {
     }
 
     board = board.copyWith(tiles: tiles);
-    addRandom();
+  }
+
+  afterMove() {
+    boardUpdate();
+
+    // 전 보드(undo)와 비교하여 움직였다면 addRandom
+    if (!board.isSameBoard) {
+      addRandom();
+    }
+    board = board.copyWith(undo: board);
   }
 
   onKey(RawKeyEvent event) {
@@ -310,6 +319,18 @@ class BoardManager {
       direction = SwipeDirection.down;
     }
 
+    if (direction == SwipeDirection.left) {
+      moveLeft();
+    } else if (direction == SwipeDirection.right) {
+      moveRight();
+    } else if (direction == SwipeDirection.up) {
+      moveUp();
+    } else if (direction == SwipeDirection.down) {
+      moveDown();
+    }
+  }
+
+  onSwipe(direction) {
     if (direction == SwipeDirection.left) {
       moveLeft();
     } else if (direction == SwipeDirection.right) {
