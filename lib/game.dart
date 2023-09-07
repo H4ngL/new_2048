@@ -82,7 +82,7 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
       },
       child: SwipeDetector(
         onSwipe: (direction, offset) {
-          //_onSwipe(direction);
+          _onSwipe(direction);
         },
         child: Scaffold(
           backgroundColor: backgroundColor,
@@ -107,7 +107,9 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const ScoreBoard(),
+                        ScoreBoard(
+                            score: manager.board.score,
+                            best: manager.board.best),
                         const SizedBox(
                           height: 32.0,
                         ),

@@ -2,7 +2,7 @@ import '../models/tile.dart';
 
 class Board {
   //board의 현재 점수
-  final int score;
+  int score;
   //best score
   final int best;
   //현재 보여지는 tile list

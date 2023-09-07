@@ -2,25 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:new_2048/const/colors.dart';
 
 class ScoreBoard extends StatelessWidget {
-  const ScoreBoard({super.key});
+  final int score;
+  final int best;
+
+  const ScoreBoard({super.key, required this.score, required this.best});
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        //TODO : Add Real Score and Best Score
         Score(
           label: 'SCORE',
-          score: '0',
+          score: '$score',
         ),
-        SizedBox(
+        const SizedBox(
           width: 8.0,
         ),
         Score(
           label: 'BEST',
-          score: '0',
-          padding: EdgeInsets.symmetric(horizontal: 23.0, vertical: 8.0),
+          score: '$best',
+          padding: const EdgeInsets.symmetric(horizontal: 23.0, vertical: 8.0),
         ),
       ],
     );

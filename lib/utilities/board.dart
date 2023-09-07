@@ -39,7 +39,10 @@ class BoardManager {
       growable: false,
     );
 
+    int best = board.best > board.score ? board.best : board.score;
+
     board = Board.newGame(0, tiles);
+    board = board.copyWith(best: best);
     addRandom();
     addRandom();
   }
@@ -71,9 +74,50 @@ class BoardManager {
     board.tiles[row][col] = board.tiles[row][col].copyWith(value: rand);
   }
 
-  // board에 타일이 있는지 확인
-  bool isNotEmpty() {
-    return board.tiles.any((row) => row.any((tile) => tile.value != 0));
+  // 점수 계산
+  calcscore() {
+    int score = 0;
+    for (var row in board.tiles) {
+      for (var tile in row) {
+        score += tile.value;
+      }
+    }
+    board.score = score;
+  }
+
+  // 움직일 수 있는지 확인
+  bool isMovable() {
+    if (!isFull()) {
+      return true;
+    } else {
+      // 주변에 같은 숫자가 있는지 확인
+      for (var i = 0; i < board.tiles.length; i++) {
+        for (var j = 0; j < board.tiles[i].length - 1; j++) {
+          if (board.tiles[i][j] == board.tiles[i][j + 1]) {
+            return true;
+          }
+        }
+      }
+
+      for (var i = 0; i < board.tiles.length; i++) {
+        for (var j = 0; j < board.tiles[i].length - 1; j++) {
+          if (board.tiles[j][i] == board.tiles[j + 1][i]) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }
+  }
+
+  // 게임 오버 확인
+  bool isOver() {
+    if (isMovable()) {
+      return false;
+    } else {
+      return true;
+    }
   }
 
   // 왼순 단순 이동에 의한 tile list의 nextIndex 수정
@@ -297,6 +341,7 @@ class BoardManager {
     board = board.copyWith(tiles: tiles);
   }
 
+  // addRandom 여부 확인
   afterMove() {
     boardUpdate();
 
@@ -305,8 +350,14 @@ class BoardManager {
       addRandom();
     }
     board = board.copyWith(undo: board);
+    calcscore();
+
+    if (isOver()) {
+      board = board.copyWith(over: true);
+    }
   }
 
+  // 키보드 입력
   onKey(RawKeyEvent event) {
     SwipeDirection? direction;
     if (event.logicalKey.keyLabel == "Arrow Right") {
@@ -330,6 +381,7 @@ class BoardManager {
     }
   }
 
+  // 스와이프 입력
   onSwipe(direction) {
     if (direction == SwipeDirection.left) {
       moveLeft();
