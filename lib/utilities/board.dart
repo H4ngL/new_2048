@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
+import 'package:logger/logger.dart';
 import 'package:new_2048/models/board.dart';
 import 'package:new_2048/models/tile.dart';
 
@@ -9,7 +10,7 @@ import 'package:uuid/uuid.dart';
 
 class BoardManager {
   late Board board;
-
+  final logger = Logger();
   BoardManager() {
     var tiles = List<List<Tile>>.generate(
       4,
@@ -147,10 +148,12 @@ class BoardManager {
   }
 
   onKey(RawKeyEvent event) {
+    logger.v(event);
     SwipeDirection? direction;
     if (event.isKeyPressed(LogicalKeyboardKey.arrowRight)) {
       direction = SwipeDirection.right;
-    } else if (event.isKeyPressed(LogicalKeyboardKey.arrowLeft)) {
+    } else if (event.logicalKey.keyLabel == "Arrow Left") {
+      logger.v("left");
       direction = SwipeDirection.left;
     } else if (event.isKeyPressed(LogicalKeyboardKey.arrowUp)) {
       direction = SwipeDirection.up;

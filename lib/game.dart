@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
+import 'package:logger/logger.dart';
 import 'package:new_2048/components/button.dart';
 import 'package:new_2048/components/empty_board.dart';
 import 'package:new_2048/components/score_board.dart';
@@ -17,6 +18,7 @@ class Game extends StatefulWidget {
 
 class _GameState extends State<Game> with TickerProviderStateMixin {
   late final manager = BoardManager();
+  final logger = Logger();
 
   late final AnimationController moveController = AnimationController(
     duration: const Duration(milliseconds: 200),
@@ -47,20 +49,17 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  var keyEvent;
-  void onKey(event) {
-    setState(() {
-      if (event is RawKeyUpEvent) {
-        print('released');
-        manager.onKey(keyEvent);
-        moveController.forward();
-        // manager.boardUpdate();
-        // moveController.reset();
-      } else {
-        keyEvent = event;
-        print('pressed');
-      }
-    });
+  void _onKey(event) {
+    if (moveController.isAnimating) return;
+    if (event is RawKeyUpEvent) {
+      setState(() {
+        //logger.v("keyup");
+        manager.onKey(event);
+        moveController
+            .forward(from: 0.0)
+            .whenComplete(() => manager.boardUpdate());
+      });
+    }
   }
 
   @override
@@ -69,7 +68,7 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
       autofocus: true,
       focusNode: FocusNode(),
       onKey: (RawKeyEvent event) {
-        onKey(event);
+        _onKey(event);
       },
       child: SwipeDetector(
         onSwipe: (direction, offset) {
