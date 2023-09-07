@@ -42,6 +42,5 @@ class Tile {
   Tile copyWith(
           {String? id, int? value, int? index, int? nextIndex, bool? merged}) =>
       Tile(id ?? this.id, value ?? this.value, index ?? this.index,
-          nextIndex: nextIndex ?? this.nextIndex,
-          merged: merged ?? this.merged);
+          nextIndex: nextIndex, merged: merged ?? this.merged);
 }

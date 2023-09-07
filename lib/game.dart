@@ -53,7 +53,6 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
     if (moveController.isAnimating) return;
     if (event is RawKeyUpEvent) {
       setState(() {
-        //logger.v("keyup");
         manager.onKey(event);
         moveController
             .forward(from: 0.0)
@@ -62,6 +61,30 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
     }
   }
 
+  // void _onKey(event) {
+  //   if (moveController.isAnimating) return;
+  //   if (event is RawKeyUpEvent) {
+  //     setState(() {
+  //       manager.onKey(event);
+  //       moveController.forward(from: 0.0);
+  //       moveController.addStatusListener((status) {
+  //         if (status == AnimationStatus.completed) {
+  //           setState(() {
+  //             manager.boardUpdate();
+  //             // for (int i = 0; i < 4; i++) {
+  //             //   for (int j = 0; j < 4; j++) {
+  //             //     print(
+  //             //         'value : ${manager.board.tiles[i][j].value}, index : ${manager.board.tiles[i][j].index}, next : ${manager.board.tiles[i][j].nextIndex}');
+  //             //   }
+  //             // }
+  //             // print('-------------------');
+  //           });
+  //         }
+  //       });
+  //     });
+  //   }
+  // }
+
   @override
   Widget build(BuildContext context) {
     return RawKeyboardListener(
@@ -69,6 +92,7 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
       focusNode: FocusNode(),
       onKey: (RawKeyEvent event) {
         _onKey(event);
+        setState(() {});
       },
       child: SwipeDetector(
         onSwipe: (direction, offset) {

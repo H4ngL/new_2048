@@ -44,20 +44,31 @@ class BoardManager {
     addRandom();
   }
 
+  // board가 꽉 찼는지 확인
+  bool isFull() {
+    return board.tiles.every((row) => row.every((tile) => tile.value != 0));
+  }
+
   // 2 혹은 4를 리스트의 랜덤 위치에 추가
   addRandom() {
     if (isFull()) return;
 
-    int rand = Random().nextBool() ? 2 : 4;
-    int col = Random().nextInt(4);
-    int row = Random().nextInt(4);
+    List<Tile> emptyTiles = [];
 
-    while (board.tiles[col][row].value != 0) {
-      col = Random().nextInt(4);
-      row = Random().nextInt(4);
+    for (var row in board.tiles) {
+      for (var tile in row) {
+        if (tile.value == 0) {
+          emptyTiles.add(tile);
+        }
+      }
     }
 
-    board.tiles[col][row] = Tile(const Uuid().v4(), rand, col * 4 + row);
+    int rand = Random().nextBool() ? 2 : 4;
+    int index = Random().nextInt(emptyTiles.length);
+    int row = emptyTiles[index].index ~/ 4;
+    int col = emptyTiles[index].index % 4;
+
+    board.tiles[row][col] = board.tiles[row][col].copyWith(value: rand);
   }
 
   // board에 타일이 있는지 확인
@@ -65,25 +76,144 @@ class BoardManager {
     return board.tiles.any((row) => row.any((tile) => tile.value != 0));
   }
 
-  bool isFull() {
-    return board.tiles.every((row) => row.every((tile) => tile.value != 0));
-  }
+  // 왼순 단순 이동에 의한 tile list의 nextIndex 수정
+  List<Tile> slideLeft(List<Tile> tiles, int leftIndex) {
+    List<Tile> newTiles = [];
 
-  // 왼쪽 단순 이동에 의한 tile의 nextIndex 수정
-  Tile slideLeft(Tile tile) {
-    int i = tile.index ~/ 4;
-    int j = tile.index % 4;
-    int? nextIndex;
+    int recentValue = 0;
+    int nextIndex = 0;
+    bool firstIndex = true;
 
-    if (board.tiles[i][j].value != 0) {
-      int k = j;
-      while (k > 0 && (board.tiles[i][k - 1].value == 0)) {
-        nextIndex = board.tiles[i][k - 1].index;
-        k--;
+    for (int i = 0; i < 4; i++) {
+      if (tiles[i].value != 0) {
+        // 첫 번째로 value를 소지한 타일이라면
+        if (firstIndex) {
+          newTiles.add(tiles[i].copyWith(nextIndex: leftIndex));
+          firstIndex = false;
+          recentValue = tiles[i].value;
+          nextIndex = leftIndex;
+        } else {
+          // merge가 가능하다면
+          if (recentValue == tiles[i].value) {
+            newTiles.add(tiles[i].copyWith(nextIndex: nextIndex));
+            recentValue = 0;
+          } else {
+            newTiles.add(tiles[i].copyWith(nextIndex: nextIndex + 1));
+            recentValue = tiles[i].value;
+            nextIndex++;
+          }
+        }
+      } else {
+        newTiles.add(tiles[i].copyWith());
       }
     }
 
-    return tile.copyWith(nextIndex: nextIndex);
+    return newTiles;
+  }
+
+  // 오른쪽 단순 이동에 의한 tile list의 nextIndex 수정
+  List<Tile> slideRight(List<Tile> tiles, int rightIndex) {
+    List<Tile> newTiles = [];
+
+    int recentValue = 0;
+    int nextIndex = 0;
+    bool firstIndex = true;
+
+    for (int i = 3; i >= 0; i--) {
+      if (tiles[i].value != 0) {
+        // 첫 번째로 value를 소지한 타일이라면
+        if (firstIndex) {
+          newTiles.add(tiles[i].copyWith(nextIndex: rightIndex));
+          firstIndex = false;
+          recentValue = tiles[i].value;
+          nextIndex = rightIndex;
+        } else {
+          // merge가 가능하다면
+          if (recentValue == tiles[i].value) {
+            newTiles.add(tiles[i].copyWith(nextIndex: nextIndex));
+            recentValue = 0;
+          } else {
+            newTiles.add(tiles[i].copyWith(nextIndex: nextIndex - 1));
+            recentValue = tiles[i].value;
+            nextIndex--;
+          }
+        }
+      } else {
+        newTiles.add(tiles[i].copyWith());
+      }
+    }
+
+    return newTiles;
+  }
+
+  // 위쪽 단순 이동에 의한 tile list의 nextIndex 수정
+  List<Tile> slideUp(List<Tile> tiles, upIndex) {
+    List<Tile> newTiles = [];
+
+    int recentValue = 0;
+    int nextIndex = 0;
+    bool firstIndex = true;
+
+    for (int i = 0; i < 4; i++) {
+      if (tiles[i].value != 0) {
+        // 첫 번째로 value를 소지한 타일이라면
+        if (firstIndex) {
+          newTiles.add(tiles[i].copyWith(nextIndex: upIndex));
+          firstIndex = false;
+          recentValue = tiles[i].value;
+          nextIndex = upIndex;
+        } else {
+          // merge가 가능하다면
+          if (recentValue == tiles[i].value) {
+            newTiles.add(tiles[i].copyWith(nextIndex: nextIndex));
+            recentValue = 0;
+          } else {
+            newTiles.add(tiles[i].copyWith(nextIndex: nextIndex + 4));
+            recentValue = tiles[i].value;
+            nextIndex += 4;
+          }
+        }
+      } else {
+        newTiles.add(tiles[i].copyWith());
+      }
+    }
+
+    return newTiles;
+  }
+
+  // 아래쪽 단순 이동에 의한 tile list의 nextIndex 수정
+  List<Tile> slideDown(List<Tile> tiles, downIndex) {
+    List<Tile> newTiles = [];
+
+    int recentValue = 0;
+    int nextIndex = 0;
+    bool firstIndex = true;
+
+    for (int i = 3; i >= 0; i--) {
+      if (tiles[i].value != 0) {
+        // 첫 번째로 value를 소지한 타일이라면
+        if (firstIndex) {
+          newTiles.add(tiles[i].copyWith(nextIndex: downIndex));
+          firstIndex = false;
+          recentValue = tiles[i].value;
+          nextIndex = downIndex;
+        } else {
+          // merge가 가능하다면
+          if (recentValue == tiles[i].value) {
+            newTiles.add(tiles[i].copyWith(nextIndex: nextIndex));
+            recentValue = 0;
+          } else {
+            newTiles.add(tiles[i].copyWith(nextIndex: nextIndex - 4));
+            recentValue = tiles[i].value;
+            nextIndex -= 4;
+          }
+        }
+      } else {
+        newTiles.add(tiles[i].copyWith());
+      }
+    }
+
+    return newTiles;
   }
 
   // 왼쪽 이동
@@ -91,84 +221,103 @@ class BoardManager {
     List<List<Tile>> tiles = [];
 
     for (int i = 0; i < 4; i++) {
-      List<Tile> row = [];
-      for (int j = 0; j < 4; j++) {
-        Tile tile = slideLeft(board.tiles[i][j]);
-        row.add(tile);
-      }
-      tiles.add(row);
+      tiles.add(slideLeft(board.tiles[i], i * 4));
     }
 
     board = board.copyWith(tiles: tiles);
-    //addRandom();
-
-    // for (var i = 0; i < board.tiles.length; i++) {
-    //   for (var j = 0; j < board.tiles[i].length; j++) {
-    //     if (board.tiles[i][j].value == 0) {
-    //       continue;
-    //     } else {
-    //       int k = j;
-    //       while (k > 0 && board.tiles[i][k - 1].value == 0) {
-    //         board.tiles[i][k - 1] = board.tiles[i][k].copyWith(
-    //           index: board.tiles[i][k - 1].index,
-    //         );
-    //         board.tiles[i][k] = Tile(const Uuid().v4(), 0, i * 4 + k);
-    //         k--;
-    //       }
-    //     }
-    //   }
-    // }
-
-    // for (int i = 0; i < 4; i++) {
-    //   for (int j = 0; j < 4; j++) {
-    //     print(
-    //         '${board.tiles[i][j].value}, ${board.tiles[i][j].index}, ${board.tiles[i][j].nextIndex}');
-    //   }
-    // }
-    // print("\n");
   }
 
-  // index를 nextIndex로 바꾸고 nextIndex를 null로 바꿈
-  boardUpdate() {
+  // 오른쪽 이동
+  moveRight() {
     List<List<Tile>> tiles = [];
 
     for (int i = 0; i < 4; i++) {
-      List<Tile> row = [];
-      for (int j = 0; j < 4; j++) {
-        Tile tile = board.tiles[i][j].copyWith(
-          index: board.tiles[i][j].nextIndex ?? board.tiles[i][j].index,
-          nextIndex: null,
-        );
-        row.add(tile);
-      }
-      tiles.add(row);
+      tiles.add(slideRight(board.tiles[i], i * 4 + 3));
     }
 
     board = board.copyWith(tiles: tiles);
   }
 
+  // 위쪽 이동
+  moveUp() {
+    List<List<Tile>> tiles = [];
+
+    for (int i = 0; i < 4; i++) {
+      tiles.add(slideUp(board.tiles.map((e) => e[i]).toList(), i));
+    }
+
+    board = board.copyWith(tiles: tiles);
+  }
+
+  // 아래쪽 이동
+  moveDown() {
+    List<List<Tile>> tiles = [];
+
+    for (int i = 0; i < 4; i++) {
+      tiles.add(slideDown(board.tiles.map((e) => e[i]).toList(), i + 12));
+    }
+
+    board = board.copyWith(tiles: tiles);
+  }
+
+  // board 업데이트
+  boardUpdate() {
+    var tiles = List<List<Tile>>.generate(
+      4,
+      (i) => List<Tile>.generate(
+        4,
+        (index) => Tile(const Uuid().v4(), 0, i * 4 + index),
+        growable: false,
+      ),
+      growable: false,
+    );
+
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 4; j++) {
+        if (board.tiles[i][j].value != 0 &&
+            board.tiles[i][j].nextIndex != null) {
+          int row = (board.tiles[i][j].nextIndex ?? 0) ~/ 4;
+          int col = (board.tiles[i][j].nextIndex ?? 0) % 4;
+
+          if (tiles[row][col].value != 0) {
+            tiles[row][col] = tiles[row][col].copyWith(
+              value: tiles[row][col].value * 2,
+              merged: true,
+            );
+          } else {
+            tiles[row][col] = board.tiles[i][j].copyWith(
+              index: board.tiles[i][j].nextIndex ?? board.tiles[i][j].index,
+              nextIndex: null,
+            );
+          }
+        }
+      }
+    }
+
+    board = board.copyWith(tiles: tiles);
+    addRandom();
+  }
+
   onKey(RawKeyEvent event) {
-    logger.v(event);
     SwipeDirection? direction;
-    if (event.isKeyPressed(LogicalKeyboardKey.arrowRight)) {
+    if (event.logicalKey.keyLabel == "Arrow Right") {
       direction = SwipeDirection.right;
     } else if (event.logicalKey.keyLabel == "Arrow Left") {
-      logger.v("left");
       direction = SwipeDirection.left;
-    } else if (event.isKeyPressed(LogicalKeyboardKey.arrowUp)) {
+    } else if (event.logicalKey.keyLabel == "Arrow Up") {
       direction = SwipeDirection.up;
-    } else if (event.isKeyPressed(LogicalKeyboardKey.arrowDown)) {
+    } else if (event.logicalKey.keyLabel == "Arrow Down") {
       direction = SwipeDirection.down;
     }
 
-    // if (event is RawKeyUpEvent) {
-    //   print(event.);
-    //   return;
-    // }
-
     if (direction == SwipeDirection.left) {
       moveLeft();
-      //addRandom();
+    } else if (direction == SwipeDirection.right) {
+      moveRight();
+    } else if (direction == SwipeDirection.up) {
+      moveUp();
+    } else if (direction == SwipeDirection.down) {
+      moveDown();
     }
   }
 }
