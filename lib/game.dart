@@ -51,7 +51,11 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
 
   void _onKey(event) {
     if (moveController.isAnimating) return;
-    if (event is RawKeyUpEvent) {
+    if (event is RawKeyUpEvent &&
+        (event.logicalKey.keyLabel == "Arrow Right" ||
+            event.logicalKey.keyLabel == "Arrow Left" ||
+            event.logicalKey.keyLabel == "Arrow Up" ||
+            event.logicalKey.keyLabel == "Arrow Down")) {
       setState(() {
         manager.onKey(event);
         moveController.forward(from: 0.0).whenComplete(() => _afterMove());
@@ -73,6 +77,14 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
   }
 
   @override
+  void initState() {
+    super.initState();
+    manager.initializeBest().whenComplete(() {
+      setState(() {});
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (manager.board.over) {
       return Positioned.fill(
@@ -85,7 +97,7 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
               style: TextStyle(
                   color: textColor,
                   fontWeight: FontWeight.bold,
-                  fontSize: 64.0),
+                  fontSize: 60.0),
               child: Text(
                 'Game over!',
               ),
@@ -129,7 +141,7 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
                     const Text(
                       '2048',
                       style: TextStyle(
-                        fontSize: 70.0,
+                        fontSize: 52.0,
                         fontWeight: FontWeight.bold,
                         color: textColor,
                       ),
@@ -144,15 +156,28 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
                         const SizedBox(
                           height: 32.0,
                         ),
-                        ButtonWidget(
-                          icon: Icons.refresh,
-                          onPressed: () {
-                            setState(
-                              () {
-                                manager.initBoard();
+                        Row(
+                          children: [
+                            ButtonWidget(
+                              icon: Icons.bar_chart,
+                              onPressed: () {
+                                manager.showLeaderboardDialog(context);
                               },
-                            );
-                          },
+                            ),
+                            const SizedBox(
+                              width: 8.0,
+                            ),
+                            ButtonWidget(
+                              icon: Icons.refresh,
+                              onPressed: () {
+                                setState(
+                                  () {
+                                    manager.initBoard();
+                                  },
+                                );
+                              },
+                            ),
+                          ],
                         ),
                       ],
                     ),

@@ -1,14 +1,21 @@
 import 'dart:math';
 
-import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
+import 'package:logger/logger.dart';
+import 'package:new_2048/components/leader_board.dart';
+import 'package:new_2048/const/colors.dart';
+import 'package:new_2048/firebase/functions.dart';
+import 'package:uuid/uuid.dart';
+
 import 'package:new_2048/models/board.dart';
 import 'package:new_2048/models/tile.dart';
 
-import 'package:uuid/uuid.dart';
-
 class BoardManager {
   late Board board;
+  Firestore fs = Firestore();
+  final logger = Logger();
+
   BoardManager() {
     var tiles = List<List<Tile>>.generate(
       4,
@@ -21,12 +28,21 @@ class BoardManager {
     );
 
     board = Board.newGame(0, tiles);
+
     addRandom();
     addRandom();
+    calcscore();
+  }
+
+  int worldBest = 0;
+
+  Future<void> initializeBest() async {
+    int best = await fs.getBest();
+    board = board.copyWith(best: best);
   }
 
   // 보드를 초기화
-  initBoard() {
+  initBoard() async {
     var tiles = List<List<Tile>>.generate(
       4,
       (i) => List<Tile>.generate(
@@ -38,11 +54,14 @@ class BoardManager {
     );
 
     int best = board.best > board.score ? board.best : board.score;
+    fs.writeScore(board.score);
 
     board = Board.newGame(0, tiles);
     board = board.copyWith(best: best);
+
     addRandom();
     addRandom();
+    calcscore();
   }
 
   // board가 꽉 찼는지 확인
@@ -73,7 +92,7 @@ class BoardManager {
   }
 
   // 점수 계산
-  calcscore() {
+  calcscore() async {
     int score = 0;
     for (var row in board.tiles) {
       for (var tile in row) {
@@ -389,5 +408,41 @@ class BoardManager {
     } else if (direction == SwipeDirection.down) {
       moveDown();
     }
+  }
+
+  void showLeaderboardDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Leader Board',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 24.0,
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                LeaderBoardWidget(top10: fs.top10),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('close', style: TextStyle(color: textColor)),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

@@ -22,7 +22,7 @@ class ScoreBoard extends StatelessWidget {
         Score(
           label: 'BEST',
           score: '$best',
-          padding: const EdgeInsets.symmetric(horizontal: 23.0, vertical: 8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         ),
       ],
     );
