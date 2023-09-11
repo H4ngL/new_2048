@@ -3,17 +3,18 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
 import 'package:logger/logger.dart';
-import 'package:new_2048/components/leader_board.dart';
-import 'package:new_2048/const/colors.dart';
-import 'package:new_2048/firebase/functions.dart';
+
 import 'package:uuid/uuid.dart';
 
+import 'package:new_2048/components/leader_board.dart';
+import 'package:new_2048/const/colors.dart';
+import 'package:new_2048/firebase/firestore.dart';
 import 'package:new_2048/models/board.dart';
 import 'package:new_2048/models/tile.dart';
 
 class BoardManager {
   late Board board;
-  Firestore fs = Firestore();
+  FirestoreManager fs = FirestoreManager();
   final logger = Logger();
 
   BoardManager() {
@@ -54,10 +55,10 @@ class BoardManager {
     );
 
     int best = board.best > board.score ? board.best : board.score;
-    fs.writeScore(board.score);
 
     board = Board.newGame(0, tiles);
     board = board.copyWith(best: best);
+    fs.writeBest(best);
 
     addRandom();
     addRandom();

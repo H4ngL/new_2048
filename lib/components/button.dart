@@ -31,7 +31,7 @@ class ButtonWidget extends StatelessWidget {
     }
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: buttonColor, // 원하는 배경색으로 변경
+        backgroundColor: buttonColor,
       ),
       onPressed: onPressed,
       child: const Text(

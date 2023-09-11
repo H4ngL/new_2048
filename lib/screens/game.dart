@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
 import 'package:logger/logger.dart';
+
 import 'package:new_2048/components/button.dart';
 import 'package:new_2048/components/empty_board.dart';
 import 'package:new_2048/components/score_board.dart';
 import 'package:new_2048/components/tile_board.dart';
 import 'package:new_2048/const/colors.dart';
+import 'package:new_2048/firebase/firebase_auth.dart';
+import 'package:new_2048/screens/auth_screen.dart';
 import 'package:new_2048/utilities/board.dart';
 
 class Game extends StatefulWidget {
@@ -76,6 +79,42 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
     setState(() {});
   }
 
+  Future<dynamic> logoutPopUp() {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                AuthManager().logout();
+                Navigator.of(context).pop();
+                Navigator.of(context).pushReplacement(MaterialPageRoute(
+                  builder: (context) => AuthScreen(),
+                ));
+              },
+              child: const Text(
+                'Yes',
+                style: TextStyle(color: textColor),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                'No',
+                style: TextStyle(color: textColor),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -87,34 +126,36 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     if (manager.board.over) {
-      return Positioned.fill(
-          child: Container(
-        color: overlayColor,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const DefaultTextStyle(
-              style: TextStyle(
-                  color: textColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 60.0),
-              child: Text(
-                'Game over!',
+      return Stack(children: [
+        Positioned.fill(
+            child: Container(
+          color: overlayColor,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const DefaultTextStyle(
+                style: TextStyle(
+                    color: textColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 60.0),
+                child: Text(
+                  'Game over!',
+                ),
               ),
-            ),
-            const SizedBox(
-              height: 16.0,
-            ),
-            ButtonWidget(
-              onPressed: () {
-                setState(() {
-                  manager.initBoard();
-                });
-              },
-            )
-          ],
-        ),
-      ));
+              const SizedBox(
+                height: 16.0,
+              ),
+              ButtonWidget(
+                onPressed: () {
+                  setState(() {
+                    manager.initBoard();
+                  });
+                },
+              )
+            ],
+          ),
+        )),
+      ]);
     }
 
     return RawKeyboardListener(
@@ -175,6 +216,17 @@ class _GameState extends State<Game> with TickerProviderStateMixin {
                                     manager.initBoard();
                                   },
                                 );
+                              },
+                            ),
+                            const SizedBox(
+                              width: 8.0,
+                            ),
+                            ButtonWidget(
+                              icon: Icons.power_settings_new,
+                              onPressed: () {
+                                setState(() {
+                                  logoutPopUp();
+                                });
                               },
                             ),
                           ],
