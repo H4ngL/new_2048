@@ -51,19 +51,11 @@ class _AuthWidgetState extends State<AuthWidget> {
   }
 
   Future<void> _register() async {
-    bool success = await widget.authManager.register(
+    await widget.authManager.register(
+      context,
       emailController.text,
       passwordController.text,
     );
-    if (success) {
-      setState(() {
-        popUp('Registration Success', 'Registration completed. Please login.');
-      });
-    } else {
-      setState(() {
-        popUp('Registration Error', widget.authManager.errorMessage);
-      });
-    }
 
     emailController.text = '';
     passwordController.text = '';
@@ -71,6 +63,7 @@ class _AuthWidgetState extends State<AuthWidget> {
 
   Future<void> _login() async {
     widget.authManager.login(
+      context,
       emailController.text,
       passwordController.text,
     );
@@ -155,8 +148,9 @@ class _AuthWidgetState extends State<AuthWidget> {
                 backgroundColor: buttonColor,
                 elevation: 0.0,
               ),
-              onPressed: () => widget.authManager
-                  .login(emailController.text, passwordController.text),
+              onPressed: _login,
+              // onPressed: () => widget.authManager.login(
+              //     context, emailController.text, passwordController.text),
               child: const Text(
                 'LOGIN',
                 style: TextStyle(

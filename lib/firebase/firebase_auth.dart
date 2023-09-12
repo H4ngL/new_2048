@@ -1,85 +1,55 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 
 class AuthManager {
   Logger logger = Logger();
   String errorMessage = '';
 
-  AuthManager() {
-    //isLogin();
-  }
-
   // 회원가입
-  Future<bool> register(String email, String pw) async {
-    if (email.isEmpty || pw.isEmpty) {
-      errorMessage = 'Please enter your email and password.';
-      return false;
-    }
-
+  Future<bool> register(BuildContext context, String email, String pw) async {
     try {
-      final credential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: pw,
       );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Register Success!'),
+          duration: Duration(seconds: 1),
+        ),
+      );
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'invalid-email') {
-        errorMessage = 'The email address is not valid.';
-        return false;
-      } else if (e.code == 'weak-password') {
-        errorMessage = 'Please enter a password with at least 6 characters.';
-        return false;
-      } else if (e.code == 'email-already-in-use') {
-        errorMessage = 'The account already exists for that email.';
-        return false;
-      }
-    } catch (e) {
-      errorMessage = e.toString();
-      return false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.code),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    }
+    return true;
+  }
+
+  // 로그인
+  Future<bool> login(BuildContext context, String email, String pw) async {
+    try {
+      await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: pw);
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.code),
+          duration: const Duration(seconds: 1),
+        ),
+      );
     }
 
     return true;
   }
 
-  // 로그인
-  void login(String email, String pw) async {
-    if (email.isEmpty || pw.isEmpty) {
-      errorMessage = 'Please enter your email and password.';
-      return;
-    }
-    print('email: $email, pw: $pw');
-
-    try {
-      print('in try');
-      FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: pw,
-      );
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'invalid-email') {
-        errorMessage = 'The email address is not valid.';
-        print(errorMessage);
-      } else if (e.code == 'user-not-found') {
-        errorMessage = 'No user found for that email.';
-        print(errorMessage);
-      } else if (e.code == 'wrong-password') {
-        errorMessage = 'Wrong password provided for that user.';
-        print(errorMessage);
-      }
-    } catch (e) {
-      errorMessage = e.toString();
-      print(e);
-    }
-  }
-
   // 로그아웃
   void logout() async {
     await FirebaseAuth.instance.signOut();
-  }
-
-  // 회원가입, 로그인 시 사용자 영속
-  void authPersistence() async {
-    await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
   }
 
   // 현제 로그인한 사용자 정보
