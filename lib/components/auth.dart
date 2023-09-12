@@ -1,6 +1,12 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
+
 import 'package:new_2048/const/colors.dart';
 import 'package:new_2048/firebase/firebase_auth.dart';
+import 'package:new_2048/firebase/google_login.dart';
+import 'package:new_2048/screens/game.dart';
 
 class AuthWidget extends StatefulWidget {
   final AuthManager authManager;
@@ -19,6 +25,7 @@ class AuthWidget extends StatefulWidget {
 class _AuthWidgetState extends State<AuthWidget> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  Logger logger = Logger();
 
   Future<dynamic> popUp(String title, String errorMessage) {
     return showDialog(
@@ -63,22 +70,47 @@ class _AuthWidgetState extends State<AuthWidget> {
   }
 
   Future<void> _login() async {
-    bool success = await widget.authManager.login(
+    widget.authManager.login(
       emailController.text,
       passwordController.text,
     );
-    if (success) {
-      if (widget.onLoginSuccess != null) {
-        widget.onLoginSuccess!();
-      }
-    } else {
-      setState(() {
-        popUp('Login Error', widget.authManager.errorMessage);
-      });
-    }
 
     emailController.text = '';
     passwordController.text = '';
+  }
+
+  Future<void> _signInWithGoogle() async {
+    // 웹 플랫폼에서만 Firebase Authentication을 사용
+    if (kIsWeb) {
+      try {
+        var check = await signInWithGoogle();
+        logger.i('check: $check');
+        setState(() {
+          User? user = FirebaseAuth.instance.currentUser;
+          if (user != null) {
+            if (widget.onLoginSuccess != null) {
+              widget.onLoginSuccess!();
+            }
+          }
+        });
+      } catch (e) {
+        logger.i('Error signing in with Google: $e');
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    FirebaseAuth.instance.authStateChanges().listen((event) {
+      if (event != null) {
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (context) => const Game(),
+        ));
+        setState(() {});
+      }
+    });
+    widget.authManager.isLogin();
   }
 
   @override
@@ -121,8 +153,10 @@ class _AuthWidgetState extends State<AuthWidget> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: buttonColor,
+                elevation: 0.0,
               ),
-              onPressed: _login,
+              onPressed: () => widget.authManager
+                  .login(emailController.text, passwordController.text),
               child: const Text(
                 'LOGIN',
                 style: TextStyle(
@@ -140,12 +174,50 @@ class _AuthWidgetState extends State<AuthWidget> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: buttonColor,
+                elevation: 0.0,
               ),
               onPressed: _register,
               child: const Text(
                 'SIGN UP',
                 style: TextStyle(
                   fontSize: 16.0,
+                ),
+              ),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12.0),
+            child: Text(
+              'or',
+              style: TextStyle(
+                color: textColor,
+                fontSize: 16.0,
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 48.0,
+            width: 350,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: backgroundColor,
+                elevation: 0.0,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                  side: BorderSide(
+                    color: textColor,
+                    width: 1.0,
+                  ),
+                ),
+              ),
+              onPressed: () {
+                _signInWithGoogle();
+              },
+              child: const Text(
+                'Sign in with Google Account',
+                style: TextStyle(
+                  fontSize: 16.0,
+                  color: textColor,
                 ),
               ),
             ),

@@ -42,36 +42,34 @@ class AuthManager {
   }
 
   // 로그인
-  Future<bool> login(String email, String pw) async {
+  void login(String email, String pw) async {
     if (email.isEmpty || pw.isEmpty) {
       errorMessage = 'Please enter your email and password.';
-      return false;
+      return;
     }
+    print('email: $email, pw: $pw');
 
     try {
-      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      print('in try');
+      FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: pw,
       );
     } on FirebaseAuthException catch (e) {
       if (e.code == 'invalid-email') {
         errorMessage = 'The email address is not valid.';
-        return false;
+        print(errorMessage);
       } else if (e.code == 'user-not-found') {
         errorMessage = 'No user found for that email.';
-        return false;
+        print(errorMessage);
       } else if (e.code == 'wrong-password') {
         errorMessage = 'Wrong password provided for that user.';
-        return false;
+        print(errorMessage);
       }
     } catch (e) {
       errorMessage = e.toString();
-      return false;
+      print(e);
     }
-
-    authPersistence();
-
-    return true;
   }
 
   // 로그아웃
@@ -95,7 +93,7 @@ class AuthManager {
       if (user == null) {
         logger.i('User is currently signed out!');
       } else {
-        logger.i('User is signed in!');
+        logger.i('email: ${user.email}, uid: ${user.uid}');
       }
     });
   }
