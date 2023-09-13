@@ -103,7 +103,6 @@ class _AuthWidgetState extends State<AuthWidget> {
         setState(() {});
       }
     });
-    widget.authManager.isLogin();
   }
 
   @override

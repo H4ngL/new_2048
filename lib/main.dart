@@ -5,11 +5,13 @@ import 'package:new_2048/firebase/firebase_auth.dart';
 import 'package:new_2048/screens/auth_screen.dart';
 import 'package:new_2048/firebase_options.dart';
 import 'package:new_2048/screens/game.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  //FirebaseFunctions.instance.useFunctionsEmulator('localhost', 5001);
   runApp(const MyApp());
 }
 

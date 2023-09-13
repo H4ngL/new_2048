@@ -37,6 +37,7 @@ Future<User?> signInWithGoogle() async {
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool('auth', true);
+    prefs.setString('uid', uid);
     print("name: $name");
     print("userEmail: $userEmail");
     print("imageUrl: $imageUrl");
