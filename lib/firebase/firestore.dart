@@ -35,19 +35,37 @@ class FirestoreManager {
   }
 
   // list 정리
-  List<dynamic> sortAndTrim(List<dynamic> inputArray) {
-    inputArray.sort();
-    inputArray = inputArray.reversed.toList();
+  // List<dynamic> sortAndTrim(List<dynamic> inputArray) {
+  //   inputArray.sort();
+  //   inputArray = inputArray.reversed.toList();
+  //   if (inputArray.length > 10) {
+  //     inputArray.removeRange(10, inputArray.length);
+  //   }
+  //   return inputArray;
+  // }
 
-    if (inputArray.length > 10) {
-      inputArray.removeRange(10, inputArray.length);
+  // cloud function을 이용하여 firestore에서 데이터 가져오기
+  Future<List<dynamic>> callGetData(String uid) async {
+    final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+      'getData',
+    );
+
+    try {
+      final result = await callable.call({
+        'uid': uid,
+      });
+
+      final data = result.data['data'] as Map<String, dynamic>;
+      final best = data['data'] as List<dynamic>;
+      return best;
+    } catch (e) {
+      logger.e('오류 발생: $e');
+      rethrow;
     }
-
-    return inputArray;
   }
 
   // cloud function을 이용하여 list 정리
-  Future<List<dynamic>> callCloudFunction(List<dynamic> inputArray) async {
+  Future<List<dynamic>> callSortAndTrim(List<dynamic> inputArray) async {
     final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
       'sortAndTrim',
     );
@@ -91,19 +109,16 @@ class FirestoreManager {
       final uid = user.uid;
       final docRef = FirebaseFirestore.instance.collection('scores').doc(uid);
 
-      final doc = await docRef.get();
-      final data = doc.data() as Map<String, dynamic>;
-      final best = data['best'] as List<dynamic>;
-
-      final newBest = await callCloudFunction(best);
-
-      if (newBest.isEmpty) {
-        return 0;
-      } else {
+      final ret = await docRef.get().then((doc) async {
+        final data = doc.data() as Map<String, dynamic>;
+        final best = data['best'] as List<dynamic>;
+        final newBest = await callSortAndTrim(best);
         return newBest[0];
-      }
+      });
+      return ret;
+    } else {
+      return 0;
     }
-    return 0;
   }
 
   // top10에 변경이 있다면 firestore에서 read
@@ -114,10 +129,9 @@ class FirestoreManager {
       final docRef = FirebaseFirestore.instance.collection('scores').doc(uid);
 
       docRef.snapshots().listen((event) async {
-        // async 키워드 추가
         final data = event.data() as Map<String, dynamic>;
         final best = data['best'] as List<dynamic>;
-        top10 = await callCloudFunction(best); // await를 사용하여 결과를 기다립니다.
+        top10 = await callSortAndTrim(best);
       });
     }
   }
