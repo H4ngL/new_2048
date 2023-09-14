@@ -15,23 +15,26 @@ const logger = require("firebase-functions/logger");
 
 const cors = require('cors')({ origin: true });
 
+const admin = require('firebase-admin');
+admin.initializeApp();
 
-// const admin = require('firebase-admin');
-// admin.initializeApp();
+exports.getData = onRequest((request, response) => {
+  cors(request, response, async () => {
+    //console.log('start');
+    const uid = request.body['data']['uid'];
+    const docRef = await admin.firestore().collection('scores').doc(uid).get().then((doc) => {
+      if(doc.exists) {
+        //console.log('Document data:', doc.data());
+        return doc.data();
+      } else {
+        //console.log('No such document!');
+        return null;
+      }
+    });
 
-// exports.getData = onRequest({ cors: [/firebase\.com$/, "flutter.com"] }, async (request, response) => {
-//   console.log('start');
-//   const uid = request.body['data']['uid'];
-//   const docRef = await admin.firestore().collection('scores').doc(uid).get();
-
-//   if (!docRef.exists) {
-//     logger.info('No such document!');
-//     response.status(200).json({ data: { 'data': [] } });
-//   } else {
-//     logger.info('Document data:', docRef.data());
-//     response.status(200).json({ data: { 'data': docRef.data() } });
-//   }
-// });
+    response.status(200).json({ data: { 'data': docRef } });
+  });
+});
 
 exports.sortAndTrim = onRequest((request, response) => {
   cors(request, response, () => {
@@ -49,5 +52,27 @@ exports.sortAndTrim = onRequest((request, response) => {
   });
 });
 
+exports.getTop10 = onRequest((request, response) => {
+  cors(request, response, async () => {
+    //console.log('start');
+    const uid = request.body['data']['uid'];
+    const docRef = await admin.firestore().collection('scores').doc(uid).get().then((doc) => {
+      if(doc.exists) {
+        //console.log('Document data:', doc.data());
+        const inputArray = doc.data()['best'];
+        const resultArray = inputArray.sort((a, b) => b - a);
+        if (resultArray.length > 10) {
+          resultArray.splice(10, resultArray.length - 10); 
+        }
+        return resultArray;
+      } else {
+        console.log('No such document!');
+        return null;
+      }
+    });
+
+    response.status(200).json({ data: { 'data': docRef } });
+  });
+});
 
 

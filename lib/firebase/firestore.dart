@@ -45,9 +45,48 @@ class FirestoreManager {
   // }
 
   // cloud function을 이용하여 firestore에서 데이터 가져오기
-  Future<List<dynamic>> callGetData(String uid) async {
+  // Future<List<dynamic>> callGetData(String uid) async {
+  //   final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+  //     'getData',
+  //   );
+
+  //   try {
+  //     final result = await callable.call({
+  //       'uid': uid,
+  //     });
+
+  //     final data = result.data['data'] as Map<String, dynamic>;
+  //     final best = data['best'] as List<dynamic>;
+  //     return best;
+  //   } catch (e) {
+  //     logger.e('오류 발생: $e');
+  //     rethrow;
+  //   }
+  // }
+
+  // cloud function을 이용하여 list 정리
+  // Future<List<dynamic>> callSortAndTrim(List<dynamic> inputArray) async {
+  //   final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+  //     'sortAndTrim',
+  //   );
+
+  //   try {
+  //     final result = await callable.call({
+  //       'text': inputArray,
+  //     });
+
+  //     final List<dynamic> ret = result.data['text'];
+  //     return ret;
+  //   } catch (e) {
+  //     logger.e('오류 발생: $e');
+  //     rethrow;
+  //   }
+  // }
+
+  // cloud function을 이용하여 firestore에서 top10 가져오기
+  Future<List<dynamic>> callGetTop10(String uid) async {
     final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
-      'getData',
+      'getTop10',
     );
 
     try {
@@ -55,27 +94,7 @@ class FirestoreManager {
         'uid': uid,
       });
 
-      final data = result.data['data'] as Map<String, dynamic>;
-      final best = data['data'] as List<dynamic>;
-      return best;
-    } catch (e) {
-      logger.e('오류 발생: $e');
-      rethrow;
-    }
-  }
-
-  // cloud function을 이용하여 list 정리
-  Future<List<dynamic>> callSortAndTrim(List<dynamic> inputArray) async {
-    final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
-      'sortAndTrim',
-    );
-
-    try {
-      final result = await callable.call({
-        'text': inputArray,
-      });
-
-      final List<dynamic> ret = result.data['text'];
+      final List<dynamic> ret = result.data['data'];
       return ret;
     } catch (e) {
       logger.e('오류 발생: $e');
@@ -107,15 +126,8 @@ class FirestoreManager {
     final user = AuthManager().currentUser();
     if (user != null) {
       final uid = user.uid;
-      final docRef = FirebaseFirestore.instance.collection('scores').doc(uid);
-
-      final ret = await docRef.get().then((doc) async {
-        final data = doc.data() as Map<String, dynamic>;
-        final best = data['best'] as List<dynamic>;
-        final newBest = await callSortAndTrim(best);
-        return newBest[0];
-      });
-      return ret;
+      final newBest = await callGetTop10(uid);
+      return newBest[0];
     } else {
       return 0;
     }
@@ -129,9 +141,7 @@ class FirestoreManager {
       final docRef = FirebaseFirestore.instance.collection('scores').doc(uid);
 
       docRef.snapshots().listen((event) async {
-        final data = event.data() as Map<String, dynamic>;
-        final best = data['best'] as List<dynamic>;
-        top10 = await callSortAndTrim(best);
+        top10 = await callGetTop10(uid);
       });
     }
   }
